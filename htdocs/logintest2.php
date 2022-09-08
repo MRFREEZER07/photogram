@@ -2,8 +2,8 @@
 
 require_once 'libs/load.php';
 require_once 'libs/includes/UserSession.class.php';
-$user = "karthik";
-$pass ="karthik";
+$user = "she2ro";
+$pass ="asd";
 
 if (isset($_GET['logout'])) {
     if (Session::isset("session_token")) {

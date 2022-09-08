@@ -4,6 +4,9 @@ require_once "Database.class.php";
 class Session
 {
     public static $isError =false;
+    public static $user =null;
+    public static $usersession = null;
+
     public static function start()
     {
         session_start();
@@ -46,6 +49,11 @@ class Session
         }
     }
 
+    public static function getUserSession()
+    {
+        return Session::$usersession;
+    }
+
     public static function renderPage()
     {
         Session::loadTemplate('_master');
@@ -68,6 +76,17 @@ class Session
 
     public static function isAuthenticated()
     {
+        if (is_object(Session::getUserSession())) {
+            return Session::getUserSession()->isValid();
+        }
         return false;
+    }
+
+    public static function ensureLogin()
+    {
+        if (!Session::isAuthenticated()) {
+            header("Location: /login.php");
+            die();
+        }
     }
 }

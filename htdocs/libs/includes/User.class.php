@@ -26,9 +26,11 @@ class User
         $this->id =null;
         $sql = "SELECT * FROM `auth` WHERE `username`= '$username' OR `id` = '$username' LIMIT 1";
         $result = $this->conn->query($sql);
-        if ($result->num_rows==1) {
-            $data = mysqli_fetch_assoc($result);
-            $id = $data['id'];
+
+        if ($result->num_rows) {
+            $row = mysqli_fetch_assoc($result);
+            // print_r($row);
+            $this->id = $row['id'];
         } else {
             throw new Exception("Username does't exist");
         }
@@ -64,17 +66,15 @@ class User
         $result = mysqli_query($conn, $query);
         if ($result->num_rows == 1) {
             $row = $result->fetch_assoc();
-            //print_r($row);
+            print_r($row);
 
             if (password_verify($pass, $row['password'])) {
-
                 /*
                 1. Generate Session Token
                 2. Insert Session Token
                 3. Build session and give session to user.
                 */
-
-
+                //echo  $row['username'];
                 return $row['username'];
             } else {
                 return false;

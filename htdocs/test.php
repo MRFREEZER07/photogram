@@ -1,6 +1,5 @@
-<pre>
 <?php
 
-print_r($_SERVER);
-?>
-</pre>
+include "libs/load.php";
+
+

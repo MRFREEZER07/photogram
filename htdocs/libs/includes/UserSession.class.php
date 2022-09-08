@@ -6,20 +6,22 @@ require_once "User.class.php";
 require_once "Database.class.php";
 class UserSession
 {
-    public $ip;
-    public $agent;
-    public $uid;
-    public $id;
-    public $active;
-    public $time;
+    private $ip;
+    private $agent;
+    private $uid;
+    private $id;
+    private $active;
+    private $time;
 
     public function __construct($token)
     {
         $conn =Database::getConnection();
         $query ="SELECT * FROM sessions WHERE token = '$token';";
         $result =$conn->query($query);
-        if ($result->num_rows == 1) {
+        //echo "$result->num_rows";
+        if ($result->num_rows) {
             $row = $result->fetch_assoc();
+            //print_r($row);
             $this->ip =$row['ip'];
             $this->agent =$row['user_agent'];
             $this->uid =$row['uid'];
@@ -43,15 +45,20 @@ class UserSession
     public static function authenticate($user, $pass)
     {
         $username = User::login($user, $pass);
+        // echo $username;
         if ($username) {
             $conn = Database::getConnection();
-            $user = new User($username);
+            $userobj = new User($username);
+
+
+
             $ip = $_SERVER['REMOTE_ADDR'];
             $agent = $_SERVER['HTTP_USER_AGENT'];
+            //echo "uid" .$userobj->id;
             $token = md5(rand(0, 9999999) . $ip . $agent . time());
-            $query ="INSERT INTO `sessions` ( `uid`, `token`, `login_time`, `user_agent`, `ip`, `active`) VALUES ('$user->id', '$token', now(), '$agent', 'self::$ip', '1');";
-            //$result =$conn->query($query);
-            $result =true;
+            $query ="INSERT INTO `sessions` ( `uid`, `token`, `login_time`, `user_agent`, `ip`, `active`) VALUES ('$userobj->id', '$token', now(), '$agent', 'self::$ip', '1');";
+            $result =$conn->query($query);
+            //$result =true;
             if ($result) {
                 Session::set('session_token', $token);
                 return $token;
@@ -80,12 +87,13 @@ class UserSession
             if (isset($_SERVER['REMOTE_ADDR']) and isset($_SERVER['HTTP_USER_AGENT'])) {
                 if ($u->isActive() and $u->isValid()) {
                     if ($u->getIp()==$_SERVER['REMOTE_ADDR'] and $u->getUserAgent()==$_SERVER['HTTP_USER_AGENT']) {
-                        return true;
+                        Session::$user =$u->getUser();
+                        return $u;
                     } else {
                         throw new Exception("ip doesn't match");
                     }
                 } else {
-                    UserSession::removeSession();
+                    $u->removeSession();
                     throw new Exception("invalid session");
                 }
             } else {
@@ -97,26 +105,30 @@ class UserSession
     }
     public function getIp()
     {
-        return self::$ip;
+        return $this->ip;
     }
 
+    public function getUser()
+    {
+        return new User($this->uid);
+    }
     public function getUserAgent()
     {
-        return self::$agent;
+        return $this->agent;
     }
 
-    public static function deactivate()
+    public function deactivate()
     {
-        $uid = self::$uid;
+        $uid = $this->uid;
         $query = "UPDATE `sessions` SET `active` = '0' WHERE `uid` = '$uid';";
         $conn = Database::getConnection();
         $result = $conn->query($query);
         return $result ? true : false;
     }
     //remove current sesssion
-    public static function removeSession()
+    public function removeSession()
     {
-        $id= self::$id;
+        $id= $this->id;
         $query = "DELETE FROM `sessions` WHERE ((`id` = '$id'));";
         $conn = Database::getConnection();
         $result =$conn->query($query);
@@ -125,7 +137,7 @@ class UserSession
 
     public function isActive()
     {
-        $active = self::$active;
+        $active = $this->$active;
         if ($active) {
             return $active ? true : false;
         }

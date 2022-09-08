@@ -15,8 +15,7 @@
 ?>
 	</main>
 	<?php Session::loadTemplate('_footer'); ?>
-	<script
-		src="<?=$_SERVER['DOCUMENT_ROOT']?>/assets/dist/js/bootstrap.bundle.min.js">
-	</script>
-
+	<script src="../assets/dist/js/bootstrap.bundle.min.js"> </script>
 </body>
+
+</html>

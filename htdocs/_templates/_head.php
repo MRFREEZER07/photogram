@@ -8,8 +8,8 @@
 
 	<!-- Bootstrap core CSS -->
 
-	<link href="assets/dist/css/bootstrap.min.css" rel="stylesheet">
-	<title>Photogram by LAHTP</title>
+	<link href="../assets/dist/css/bootstrap.min.css" rel="stylesheet">
+
 	<?if (file_exists($_SERVER['DOCUMENT_ROOT'].'/css/'.basename($_SERVER['PHP_SELF'], ".php").".css")) {?>
 	<link
 		href="css/<?=basename($_SERVER['PHP_SELF'], ".php")?>.css"
