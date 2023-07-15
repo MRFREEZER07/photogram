@@ -2,7 +2,7 @@
 
 require_once 'libs/load.php';
 require_once 'libs/includes/UserSession.class.php';
-$user = "she2ro";
+$user = "shero";
 $pass ="asd";
 
 if (isset($_GET['logout'])) {

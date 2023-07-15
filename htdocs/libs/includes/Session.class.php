@@ -6,7 +6,7 @@ class Session
     public static $isError =false;
     public static $user =null;
     public static $usersession = null;
-
+    
     public static function start()
     {
         session_start();
@@ -16,7 +16,7 @@ class Session
     {
         session_unset();
     }
-    public static function destroy($id)
+    public static function destroy()
     {
         session_destroy();
         /*
@@ -49,6 +49,14 @@ class Session
         }
     }
 
+    
+    public static function getUser()
+    {
+        return Session::$user;
+    }
+
+
+
     public static function getUserSession()
     {
         return Session::$usersession;
@@ -59,9 +67,10 @@ class Session
         Session::loadTemplate('_master');
     }
 
-    public static function loadTemplate($name)
+    public static function loadTemplate($name,$default=null)
     {
         $script = $_SERVER['DOCUMENT_ROOT']."/_templates/$name.php";
+        
         if (is_file($script)) {
             include $script;
         } else {
@@ -85,8 +94,38 @@ class Session
     public static function ensureLogin()
     {
         if (!Session::isAuthenticated()) {
+            Session::set('_redirect',$_SERVER['REQUEST_URI']);
             header("Location: /login.php");
             die();
         }
     }
+
+    public static function isOwnerOf($owner){
+        $user = Session::getAllUserDetails();
+        
+        if($user['email']){
+            if($user['email'] ==$owner){
+                return true;
+            }else{
+                return false;
+            }
+        }else{
+            return false;
+        }
+    }
+
+    public static  function getAllUserDetails(){
+        $id = Session::$user->id;
+        $query = "SELECT username,email FROM `auth` WHERE id = $id;";   
+        $conn = Database::getConnection();
+        $result =$conn->query($query);
+        if ($result) {
+            $row = $result->fetch_assoc();
+            return $row;
+        } else {
+            throw new Exception("user Not Found");
+        }
+
+    }
+
 }

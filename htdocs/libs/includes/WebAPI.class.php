@@ -11,5 +11,12 @@ class WebAPI
     public function inititateSession()
     {
         Session::start();
+        if (Session::isset("session_token")) {
+            try {
+                Session::$usersession = UserSession::authorize(Session::get("session_token"));
+            } catch (Exception $e) {
+                //TODO handle errot
+            }
+        }
     }
 }

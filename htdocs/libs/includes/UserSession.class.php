@@ -16,7 +16,7 @@ class UserSession
     public function __construct($token)
     {
         $conn =Database::getConnection();
-        $query ="SELECT * FROM sessions WHERE token = '$token';";
+        $query ="SELECT * FROM sessions WHERE token = '$token' LIMIT 1;";
         $result =$conn->query($query);
         //echo "$result->num_rows";
         if ($result->num_rows) {
@@ -49,18 +49,17 @@ class UserSession
         if ($username) {
             $conn = Database::getConnection();
             $userobj = new User($username);
-
-
-
             $ip = $_SERVER['REMOTE_ADDR'];
             $agent = $_SERVER['HTTP_USER_AGENT'];
-            //echo "uid" .$userobj->id;
             $token = md5(rand(0, 9999999) . $ip . $agent . time());
-            $query ="INSERT INTO `sessions` ( `uid`, `token`, `login_time`, `user_agent`, `ip`, `active`) VALUES ('$userobj->id', '$token', now(), '$agent', 'self::$ip', '1');";
+            
+            $query ="INSERT INTO `sessions` ( `uid`, `token`, `login_time`, `user_agent`, `ip`, `active`) VALUES ('$userobj->id', '$token', now(), '$agent', '$ip', '1');";
+
             $result =$conn->query($query);
-            //$result =true;
+
             if ($result) {
                 Session::set('session_token', $token);
+                Session::set('uname',$username);
                 return $token;
             } else {
                 return false;
@@ -83,6 +82,7 @@ class UserSession
     public static function authorize($token)
     {
         $u = new UserSession($token);
+        
         try {
             if (isset($_SERVER['REMOTE_ADDR']) and isset($_SERVER['HTTP_USER_AGENT'])) {
                 if ($u->isActive() and $u->isValid()) {
@@ -137,7 +137,7 @@ class UserSession
 
     public function isActive()
     {
-        $active = $this->$active;
+        $active = $this->active;
         if ($active) {
             return $active ? true : false;
         }
@@ -145,7 +145,7 @@ class UserSession
 
     public function isValid()
     {
-        $time = self::$time;
+        $time = $this->time;
         if (isset($time)) {
             $login_time =DateTime::createFromFormat('Y-m-d H:i:s', $time);
             if (3600 > time() - $login_time->getTimestamp()) {

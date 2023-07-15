@@ -1,26 +1,15 @@
 <?php
 
 require_once 'UserSession.class.php';
+include_once __DIR__ ."/../traits/SQLGetterSetter.trait.php";
+ 
 class User
 {
     private $conn;
 
-    public function __call($name, $arguments)
-    {
-        $property = preg_replace("/[^0-9a-zA-Z]/", "", substr($name, 3)); //checks wheater it is atoz or 0to9
-        $property = strtolower(preg_replace('/\B([A-Z])/', '_$1', $property)); //change to lower pascalcase to lower case
-
-        if (substr($name, 0, 3) == "get") {
-            return $this->_get_data($property);
-        } elseif (substr($name, 0, 3) == "set") {
-            return $this->_set_data($property, $arguments[0]);
-        }
-    }
-
-
-
     public function __construct($username)
     {
+        //check wheater user exist or not
         $this->conn = Database::getConnection();
         $this->username =$username;
         $this->id =null;
@@ -28,9 +17,12 @@ class User
         $result = $this->conn->query($sql);
 
         if ($result->num_rows) {
-            $row = mysqli_fetch_assoc($result);
-            // print_r($row);
+            $row = $result->fetch_assoc();
+            //print_r($row);
+           // echo $row['username'];
+            //return $row;
             $this->id = $row['id'];
+          
         } else {
             throw new Exception("Username does't exist");
         }
@@ -47,15 +39,15 @@ class User
 
         $query="INSERT INTO `auth` (`username`, `password`, `email`, `active`)
         VALUES ('$username', '$password', '$email', '0');";
-
+        echo $query;
         $result =$conn->query($query);
-        //echo $result;
+        echo $result;
         if ($result === true) {
             $error = false;
         } else {
             $error= true;
         }
-        echo $error;
+
         return $error;
     }
 
@@ -66,7 +58,7 @@ class User
         $result = mysqli_query($conn, $query);
         if ($result->num_rows == 1) {
             $row = $result->fetch_assoc();
-            print_r($row);
+            //print_r($row);
 
             if (password_verify($pass, $row['password'])) {
                 /*
@@ -84,38 +76,7 @@ class User
         }
     }
 
-
-    //this function helps to retrieve data from the database
-    private function _get_data($var)
-    {
-        $conn = Database::getConnection();
-        if (!$conn) {
-            throw new Exception("error in connecting db");
-        }
-        $sql = "SELECT `$var` FROM `users` WHERE `id` = $this->id";
-
-        $result = $conn->query($sql);
-        if ($result and $result->num_rows == 1) {
-            return $result->fetch_assoc()["$var"];
-        } else {
-            return null;
-        }
-    }
-
-    //This function helps to  set the data in the database
-    private function _set_data($var, $data)
-    {
-        $conn = Database::getConnection();
-        if ($conn) {
-            throw new Exception("error in connecting db");
-        }
-        $sql = "UPDATE `users` SET `$var`='$data' WHERE `id`=$this->id;";
-        if ($conn->query($sql)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
+   
 
     public function setDob($year, $month, $day)
     {
@@ -123,6 +84,18 @@ class User
             return $this->_set_data('dob', "$year.$month.$day");
         } else {
             return false;
+        }
+    }
+
+    public static function getDetails($username){
+        $sql = "SELECT * FROM `auth` WHERE `username`= '$username' OR `id` = '$username' LIMIT 1";
+        $conn = Database::getConnection();
+        $result = $conn->query($sql);
+        if ($result->num_rows) {
+            $row = $result->fetch_assoc();
+            return $row;         
+        } else {
+            throw new Exception("Username does't exist");
         }
     }
 }
